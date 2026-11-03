@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>专属3D人像 · 智能穿搭顾问</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">🧍 专属 3D 人像 · 智能穿搭顾问</div>
+    <div class="sub">填写身材信息 → 生成专属白膜 → 获取穿搭 / 发型 / 风格 / 妆容建议 → 整套虚拟试穿</div>
+  </header>
+
+  <main class="layout">
+    <!-- 左侧：信息表单 -->
+    <aside class="panel form-panel">
+      <h2>📋 身材信息</h2>
+      <form id="bodyForm" novalidate>
+        <fieldset>
+          <legend>基本信息</legend>
+          <div class="row">
+            <label>性别</label>
+            <div class="seg" id="genderSeg">
+              <button type="button" class="seg-btn active" data-gender="female">女</button>
+              <button type="button" class="seg-btn" data-gender="male">男</button>
+            </div>
+          </div>
+          <div class="row">
+            <label for="height">身高 (cm)</label>
+            <input type="number" id="height" value="165" min="140" max="220" step="1">
+          </div>
+          <div class="row">
+            <label for="weight">体重 (kg, 选填)</label>
+            <input type="number" id="weight" value="52" min="30" max="200" step="0.5">
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>身体围度</legend>
+          <div class="row">
+            <label for="bust">胸围 (cm)</label>
+            <input type="number" id="bust" value="86" min="50" max="180" step="1">
+          </div>
+          <div class="row">
+            <label for="waist">腰围 (cm)</label>
+            <input type="number" id="waist" value="66" min="40" max="180" step="1">
+          </div>
+          <div class="row">
+            <label for="hip">臀围 (cm)</label>
+            <input type="number" id="hip" value="90" min="50" max="200" step="1">
+          </div>
+          <div class="row">
+            <label for="shoulder">肩宽 (cm)</label>
+            <input type="number" id="shoulder" value="38" min="25" max="70" step="0.5">
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>外貌特征</legend>
+          <div class="row">
+            <label for="face">脸型</label>
+            <select id="face">
+              <option value="oval">鹅蛋脸</option>
+              <option value="round">圆脸</option>
+              <option value="square">方脸</option>
+              <option value="heart">心形脸</option>
+              <option value="long">长脸</option>
+            </select>
+          </div>
+          <div class="row">
+            <label for="skin">肤色</label>
+            <select id="skin">
+              <option value="cool">冷白皮</option>
+              <option value="warm">暖白皮</option>
+              <option value="neutral">自然皮</option>
+              <option value="tan">小麦色</option>
+              <option value="deep">深色</option>
+            </select>
+          </div>
+          <div class="row">
+            <label for="stylePref">风格偏好</label>
+            <select id="stylePref">
+              <option value="minimal">简约</option>
+              <option value="sweet">温柔甜美</option>
+              <option value="elegant">优雅知性</option>
+              <option value="casual">休闲随性</option>
+              <option value="edgy">个性街头</option>
+            </select>
+          </div>
+        </fieldset>
+
+        <button type="submit" class="primary-btn">✨ 生成我的专属人像</button>
+      </form>
+    </aside>
+
+    <!-- 中间：3D 视口 -->
+    <section class="panel view-panel">
+      <div class="view-toolbar">
+        <div class="view-title">🕹 3D 白膜预览 <span id="modelSource" class="model-badge" style="display:none"></span></div>
+        <div class="view-actions">
+          <button id="toggleSkin" class="mini-btn">肤色 / 白膜</button>
+          <button id="toggleRotate" class="mini-btn">自动旋转</button>
+          <button id="resetView" class="mini-btn">重置视角</button>
+          <button id="saveImage" class="mini-btn">📷 保存图片</button>
+        </div>
+      </div>
+      <div id="canvas"></div>
+      <div id="viewHint">🖱 拖拽旋转 · 滚轮缩放 · 右键平移</div>
+    </section>
+
+    <!-- 右侧：体型分析 -->
+    <aside class="panel result-panel">
+      <h2>🔍 体型分析</h2>
+      <div id="bodyShapeCard" class="shape-card">
+        <div id="shapeEmoji" class="shape-emoji">🧍</div>
+        <div id="shapeName" class="shape-name">待生成</div>
+        <div id="shapeDesc" class="shape-desc">填写左侧信息后点击「生成」，即可获得专属体型分析。</div>
+      </div>
+      <div id="metrics" class="metrics"></div>
+    </aside>
+  </main>
+
+  <!-- 建议 -->
+  <section class="panel advice-panel">
+    <h2>💡 专属建议</h2>
+    <div class="tabs" id="adviceTabs">
+      <button class="tab active" data-tab="dress">👗 穿搭建议</button>
+      <button class="tab" data-tab="hair">💇 发型建议</button>
+      <button class="tab" data-tab="style">🎨 风格建议</button>
+      <button class="tab" data-tab="makeup" id="makeupTab">💄 妆容建议</button>
+    </div>
+    <div id="adviceContent" class="advice-content"></div>
+  </section>
+
+  <!-- 试穿 -->
+  <section class="panel tryon-panel">
+    <h2>👕 虚拟试穿</h2>
+    <p class="tryon-tip">选择单品、花纹与颜色，效果实时穿在 3D 人像上；也可一键套用整套搭配。</p>
+
+    <div class="tryon-group">
+      <div class="tryon-group-label">上装</div>
+      <div class="tryon-items" id="topItems"></div>
+    </div>
+    <div class="tryon-group">
+      <div class="tryon-group-label">下装</div>
+      <div class="tryon-items" id="bottomItems"></div>
+    </div>
+    <div class="tryon-group">
+      <div class="tryon-group-label">整套搭配</div>
+      <div class="tryon-items" id="outfitItems"></div>
+    </div>
+
+    <div class="tryon-bar">
+      <div class="tryon-colors">
+        <span class="tryon-label">颜色：</span>
+        <div id="colorSwatches"></div>
+        <input type="color" id="customColor" value="#4f6df5" title="自定义颜色">
+      </div>
+      <div class="tryon-colors">
+        <span class="tryon-label">花纹：</span>
+        <div id="patternSelector"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 本季衣橱：实拍上身渲染 -->
+  <section class="panel wardrobe-panel">
+    <h2>🧥 本季衣橱 · 白膜实穿渲染</h2>
+    <p class="tryon-tip">六件单品已穿到 3D 白膜上生成实穿效果图，点击整套搭配可在上方 3D 试穿间实时查看。</p>
+    <div class="wardrobe-grid" id="wardrobeLooks"></div>
+    <div class="wardrobe-grid" id="wardrobeItems"></div>
+  </section>
+
+  <!-- AI 深度建议 -->
+  <section class="panel ai-panel">
+    <h2>🤖 AI 深度建议（可选）</h2>
+    <p class="tryon-tip">填入 OpenAI 兼容接口（如 DeepSeek）即可获得更个性化的深度建议；不填则使用内置规则引擎。</p>
+    <details class="ai-settings" id="aiSettings">
+      <summary>⚙️ 配置 AI 接口</summary>
+      <div class="ai-form">
+        <div class="row"><label>接口地址</label><input type="text" id="aiBaseUrl" value="https://api.deepseek.com"></div>
+        <div class="row"><label>API Key</label><input type="password" id="aiKey" placeholder="sk-..."></div>
+        <div class="row"><label>模型</label><input type="text" id="aiModel" value="deepseek-chat"></div>
+      </div>
+    </details>
+    <button type="button" class="primary-btn" id="aiGenerate">✨ 生成 AI 深度建议</button>
+    <div id="aiResult" class="ai-result"></div>
+  </section>
+
+  <footer class="footer">参数化人体建模 · 规则引擎建议 · 仅作穿搭参考，具体以实际试穿为准</footer>
+
+  <!-- three.js：国内源优先，失败自动回退（轨道控制已内置，无需 OrbitControls CDN） -->
+  <script src="https://cdn.bootcdn.net/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    if (typeof THREE === 'undefined') {
+      document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');
+    }
+  </script>
+  <script>
+    if (typeof THREE === 'undefined') {
+      document.write('<script src="https://unpkg.com/three@0.128.0/build/three.min.js"><\/script>');
+    }
+  </script>
+  <!-- GLTFLoader：用于加载混元3D 导出的 GLB 白膜 -->
+  <script src="js/GLTFLoader.js"></script>
+  <!-- 可选：js/bodyModel.js（由 转换模型.py 生成）内嵌混元3D 白膜数据，缺失时自动回退内置参数模型 -->
+  <script src="js/bodyModel.js"></script>
+  <script src="js/bodyBuilder.js"></script>
+  <script src="js/recommendations.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
